@@ -129,7 +129,7 @@ void CPUBackend::performJITMemoryAllocation() {
 void CPUBackend::init() {
   irgen_.initTargetMachine(target.empty() ? "" : target.getValue(),
                            llvm::CodeModel::Model::Large);
-  JIT_ = llvm::make_unique<llvm::orc::GlowJIT>(irgen_.getTargetMachine());
+  JIT_ = llvm::make_unique<llvm::orc::GlowJIT>(irgen_.getTargetMachineShared());
   irgen_.initCodeGen();
   // Perform the address assignment for activations and WeightVars.
   performJITMemoryAllocation();
@@ -264,13 +264,14 @@ void CPUBackend::produceBundle(llvm::StringRef outputDir) {
               "Could not open the output file for saving the bundle code");
   if (fileName.endswith(".bc")) {
     // Emit the bitcode file.
-    llvm::WriteBitcodeToFile(&M, outputFile);
+    llvm::WriteBitcodeToFile(M, outputFile);
   } else if (fileName.endswith(".o")) {
     // Emit the object file.
     llvm::legacy::PassManager PM;
     auto &TM = irgen_.getTargetMachine();
     TM.addPassesToEmitFile(
-        PM, outputFile, llvm::TargetMachine::CodeGenFileType::CGFT_ObjectFile);
+        PM, outputFile, nullptr,
+        llvm::TargetMachine::CodeGenFileType::CGFT_ObjectFile);
     PM.run(M);
   }
   outputFile.close();

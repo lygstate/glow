@@ -87,7 +87,7 @@ class LLVMIRGen {
   /// The LLVM IR module.
   std::unique_ptr<llvm::Module> llmodule_{nullptr};
   /// The target machine.
-  std::unique_ptr<llvm::TargetMachine> TM_;
+  std::shared_ptr<llvm::TargetMachine> TM_;
   /// Information about allocations.
   AllocationsInfo &allocationsInfo_;
   /// Name of the main entry.
@@ -233,6 +233,7 @@ public:
   llvm::IRBuilder<> &getBuilder() { return *builder_; }
   /// \returns the target machine description.
   llvm::TargetMachine &getTargetMachine() { return *TM_; }
+  std::shared_ptr<llvm::TargetMachine> getTargetMachineShared() { return TM_; }
   /// \returns the LLVMContext being used.
   llvm::LLVMContext &getLLVMContext() { return ctx_; }
   /// Borrows the LLVM module for further processing, e.g. by a JIT.

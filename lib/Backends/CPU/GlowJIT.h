@@ -42,23 +42,24 @@ namespace orc {
 // KaleidoscopeJIT example in the LLVM tree.
 class GlowJIT {
 private:
-  TargetMachine &TM_;
+  ExecutionSession ES_;
+  std::map<VModuleKey, std::shared_ptr<SymbolResolver>> Resolvers_;
+  std::shared_ptr<TargetMachine> TM_;
   const DataLayout DL_;
-  RTDyldObjectLinkingLayer objectLayer_;
-  IRCompileLayer<decltype(objectLayer_), SimpleCompiler> compileLayer_;
+  RTDyldObjectLinkingLayer ObjectLayer_;
+  IRCompileLayer<decltype(ObjectLayer_), SimpleCompiler> CompileLayer_;
 
 public:
-  using ModuleHandle = decltype(compileLayer_)::ModuleHandleT;
+  GlowJIT(std::shared_ptr<TargetMachine>);
+  ~GlowJIT();
 
-  GlowJIT(llvm::TargetMachine &TM);
+  TargetMachine &getTargetMachine() { return *TM_; }
 
-  TargetMachine &getTargetMachine() { return TM_; }
-
-  ModuleHandle addModule(std::unique_ptr<Module> M);
+  VModuleKey addModule(std::unique_ptr<Module> M);
 
   JITSymbol findSymbol(const std::string name);
 
-  void removeModule(ModuleHandle H);
+  void removeModule(VModuleKey K);
 };
 
 } // end namespace orc
